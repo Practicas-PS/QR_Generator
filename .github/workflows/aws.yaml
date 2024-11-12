@@ -18,7 +18,7 @@ jobs:
 
       - name: Despliegue en Lightsail
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@3.141.199.155 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
           cd /var/www/html
           
           # Verificar si es un repositorio git y hacer pull o clonar
