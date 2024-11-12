@@ -1,0 +1,45 @@
+name: Deploy en AWS Lightsail
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Conexion SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Despliegue en Lightsail
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@3.141.199.155 << 'EOF'
+          cd /var/www/html
+          
+          # Verificar si es un repositorio git y hacer pull o clonar
+          if [ -d ".git" ]; then
+              git pull origin main
+          else
+              git clone https://github.com/Practicas-PS/GitFlow.git .
+          fi
+
+          # Instalar Node.js y npm
+          # Descargar e instalar Node.js (por ejemplo, versión 16)
+          curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+
+          # Verificar instalación de node y npm
+          node -v
+          npm -v
+
+          # Instalar dependencias del proyecto
+          npm install
+
+          # Si tu proyecto requiere un build, puedes correr:
+          # npm run build
+          EOF
