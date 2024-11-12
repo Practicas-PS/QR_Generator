@@ -2,44 +2,62 @@ name: Deploy en AWS Lightsail
 
 on:
   push:
-    branches: ['main']
+    branches:
+      - 'main'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Conexion SSH
+      - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Despliegue en Lightsail
+      - name: Conexión SSH a AWS Lightsail
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
+          
+          # Navegar al directorio de trabajo
           cd /var/www/html
           
-          # Verificar si es un repositorio git y hacer pull o clonar
+          # Verificar si es un repositorio Git y hacer pull, si no clonar
           if [ -d ".git" ]; then
+              echo "Repositorio git detectado, realizando pull."
               git pull origin main
           else
+              echo "Repositorio git no encontrado, clonando."
               git clone https://github.com/Practicas-PS/GitFlow.git .
           fi
 
-          # Instalar Node.js y npm
-          # Descargar e instalar Node.js (por ejemplo, versión 16)
-          curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-          sudo apt-get install -y nodejs
+          # Instalar Node.js (si no está instalado)
+          if ! node -v; then
+              echo "Instalando Node.js"
+              curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+          else
+              echo "Node.js ya está instalado"
+          fi
 
-          # Verificar instalación de node y npm
+          # Verificar versión de Node y npm
           node -v
           npm -v
 
           # Instalar dependencias del proyecto
+          echo "Instalando dependencias del proyecto."
           npm install
 
-          # Si tu proyecto requiere un build, puedes correr:
-          # npm run build
+          # Realizar build del proyecto React (si es necesario)
+          echo "Realizando build del proyecto."
+          npm run build
+
+          # (Opcional) Reiniciar el servidor de producción si usas un servidor como Nginx o PM2
+          # sudo systemctl restart nginx
+          # o si usas PM2:
+          # pm2 restart all
+
           EOF
