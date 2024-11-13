@@ -27,14 +27,14 @@ jobs:
           # Validar si el directorio está vacío antes de limpiar
           if [ "$(ls -A)" ]; then
             echo "Directorio no está vacío, limpiando..."
-            sudo rm -rf ./* .[^.]*
+            sudo rm -rf ./* .[^.]*  # Limpiar todo el contenido, incluyendo archivos ocultos
           else
             echo "Directorio ya está vacío, no se necesita limpieza."
           fi
 
-          # Clonar el repositorio
+          # Clonar el repositorio desde GitHub utilizando GITHUB_TOKEN para autenticación
           echo "Clonando el repositorio..."
-          git clone https://github.com/Practicas-PS/QR_Generator.git .
+          git clone https://$GITHUB_TOKEN@github.com/Practicas-PS/QR_Generator.git .
 
           # Verificar si el archivo package.json se copió correctamente
           if [ ! -f "package.json" ]; then
@@ -56,3 +56,5 @@ jobs:
           # pm2 restart all
 
           EOF
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Pasa el token como variable de entorno
