@@ -9,29 +9,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Checkout del código
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Paso 2: Configurar la conexión SSH
-      - name: Configuración SSH
+      - name: Configurar SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Paso 3: Conectar por SSH y realizar despliegue
       - name: Despliegue en Lightsail
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@18.216.2.88 "bash -s" << 'EOF'
           
           # Navegar al directorio de trabajo
           cd /var/www/html
+          
+          # Validar si el directorio está vacío antes de limpiar
+          if [ "$(ls -A)" ]; then
+            echo "Directorio no está vacío, limpiando..."
+            sudo rm -rf ./* .[^.]*
+          else
+            echo "Directorio ya está vacío, no se necesita limpieza."
+          fi
 
-          # Limpiar el directorio antes de clonar
-          sudo rm -rf ./*
-          sudo rm -rf .git
-
-          # Clonar el repositorio desde GitHub
+          # Clonar el repositorio
           echo "Clonando el repositorio..."
           git clone https://github.com/Practicas-PS/QR_Generator.git .
 
@@ -45,11 +46,11 @@ jobs:
           echo "Instalando dependencias..."
           npm install
 
-          # Construir el proyecto
+          # Realizar build del proyecto
           echo "Realizando build del proyecto..."
           npm run build
 
-          # Reiniciar el servidor si es necesario (ajusta según tu configuración)
+          # (Opcional) Reiniciar el servidor (ajustar según tu configuración)
           # sudo systemctl restart nginx
           # o si usas PM2:
           # pm2 restart all
