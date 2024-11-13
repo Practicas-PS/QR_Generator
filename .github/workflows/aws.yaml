@@ -12,11 +12,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configurar SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Despliegue en Lightsail
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@18.216.2.88 "bash -s" << 'EOF'
@@ -31,12 +26,8 @@ jobs:
           else
             echo "Directorio ya está vacío, no se necesita limpieza."
           fi
-
-          # Configurar el helper de credenciales para git
-          git config --global credential.helper "store --file=/tmp/git-credentials"
-          echo "https://$GITHUB_TOKEN:@github.com" > /tmp/git-credentials
           
-          # Clonar el repositorio usando el token
+          # Clonar el repositorio desde GitHub
           echo "Clonando el repositorio..."
           git clone https://github.com/Practicas-PS/QR_Generator.git .
           
@@ -45,20 +36,18 @@ jobs:
             echo "Error: No se encontró package.json después de clonar."
             exit 1
           fi
-
+          
           # Instalar dependencias del proyecto
           echo "Instalando dependencias..."
           npm install
-
+          
           # Realizar build del proyecto
           echo "Realizando build del proyecto..."
           npm run build
-
+          
           # (Opcional) Reiniciar el servidor (ajustar según tu configuración)
           # sudo systemctl restart nginx
           # o si usas PM2:
           # pm2 restart all
-
+          
           EOF
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Asegúrate de pasar el token como variable de entorno
