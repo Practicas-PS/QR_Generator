@@ -31,10 +31,14 @@ jobs:
           else
             echo "Directorio ya está vacío, no se necesita limpieza."
           fi
+
+          # Configurar el helper de credenciales para git
+          git config --global credential.helper "store --file=/tmp/git-credentials"
+          echo "https://$GITHUB_TOKEN:@github.com" > /tmp/git-credentials
           
-          # Clonar el repositorio desde GitHub usando el token para autenticación
+          # Clonar el repositorio usando el token
           echo "Clonando el repositorio..."
-          git clone https://$GITHUB_TOKEN@github.com/Practicas-PS/QR_Generator.git .
+          git clone https://github.com/Practicas-PS/QR_Generator.git .
           
           # Verificar si el archivo package.json se copió correctamente
           if [ ! -f "package.json" ]; then
@@ -57,4 +61,4 @@ jobs:
 
           EOF
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Pasa el token como variable de entorno
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Asegúrate de pasar el token como variable de entorno
