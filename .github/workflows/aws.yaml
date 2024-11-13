@@ -2,60 +2,54 @@ name: Deploy en AWS Lightsail
 
 on:
   push:
-    branches:
-      - 'main'
+    branches: ['main']
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Paso 1: Checkout del código
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH Agent
+      # Paso 2: Configurar la conexión SSH
+      - name: Configuración SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Conexión SSH a AWS Lightsail
+      # Paso 3: Conectar por SSH y realizar despliegue
+      - name: Despliegue en Lightsail
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@3.141.199.155 "bash -s" << 'EOF'
           
           # Navegar al directorio de trabajo
           cd /var/www/html
-          
-          # Verificar si es un repositorio Git y hacer pull, si no clonar
-          if [ -d ".git" ]; then
-              echo "Repositorio git detectado, realizando pull."
-              git pull origin main
-          else
-              echo "Repositorio git no encontrado, clonando."
-              git clone https://github.com/Practicas-PS/QR_Generator.git .
-          fi
 
-          # Instalar Node.js (si no está instalado)
-          if ! node -v; then
-              echo "Instalando Node.js"
-              curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-          else
-              echo "Node.js ya está instalado"
-          fi
+          # Limpiar el directorio antes de clonar
+          sudo rm -rf ./*
+          sudo rm -rf .git
 
-          # Verificar versión de Node y npm
-          node -v
-          npm -v
+          # Clonar el repositorio desde GitHub
+          echo "Clonando el repositorio..."
+          git clone https://github.com/Practicas-PS/QR_Generator.git .
+
+          # Verificar si el archivo package.json se copió correctamente
+          if [ ! -f "package.json" ]; then
+            echo "Error: No se encontró package.json después de clonar."
+            exit 1
+          fi
 
           # Instalar dependencias del proyecto
-          echo "Instalando dependencias del proyecto."
+          echo "Instalando dependencias..."
           npm install
 
-          # Realizar build del proyecto React (si es necesario)
-          echo "Realizando build del proyecto."
+          # Construir el proyecto
+          echo "Realizando build del proyecto..."
           npm run build
 
-          # (Opcional) Reiniciar el servidor de producción si usas un servidor como Nginx o PM2
+          # Reiniciar el servidor si es necesario (ajusta según tu configuración)
           # sudo systemctl restart nginx
           # o si usas PM2:
           # pm2 restart all
