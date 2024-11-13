@@ -31,7 +31,7 @@ jobs:
               git pull origin main
           else
               echo "Repositorio git no encontrado, clonando."
-              git clone https://github.com/Practicas-PS/GitFlow.git .
+              git clone https://github.com/Practicas-PS/QR_Generator.git .
           fi
 
           # Instalar Node.js (si no está instalado)
