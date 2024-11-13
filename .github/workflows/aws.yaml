@@ -12,37 +12,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Conexion SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Despliegue en Lightsail
         run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@18.216.2.88 "bash -s" << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@3.141.199.155 << 'EOF'
           
           # Navegar al directorio de trabajo
           cd /var/www/html
           
-          # Validar si el directorio está vacío antes de limpiar
-          if [ "$(ls -A)" ]; then
-            echo "Directorio no está vacío, limpiando..."
-            sudo rm -rf ./* .[^.]*  # Limpiar todo el contenido, incluyendo archivos ocultos
+          # Si el directorio es un repositorio git, hacer pull
+          if [ -d ".git" ]; then
+              echo "Repositorio encontrado, realizando git pull..."
+              git pull origin main
           else
-            echo "Directorio ya está vacío, no se necesita limpieza."
+              # Si no es un repositorio git, clonar el repositorio
+              echo "Repositorio no encontrado, clonando..."
+              git clone https://github.com/Practicas-PS/QR_Generator.git .
           fi
           
-          # Clonar el repositorio desde GitHub
-          echo "Clonando el repositorio..."
-          git clone https://github.com/Practicas-PS/QR_Generator.git .
-          
-          # Verificar si el archivo package.json se copió correctamente
-          if [ ! -f "package.json" ]; then
-            echo "Error: No se encontró package.json después de clonar."
-            exit 1
-          fi
-          
-          # Instalar dependencias del proyecto
+          # Instalar dependencias
           echo "Instalando dependencias..."
           npm install
           
           # Realizar build del proyecto
-          echo "Realizando build del proyecto..."
+          echo "Realizando build..."
           npm run build
           
           # (Opcional) Reiniciar el servidor (ajustar según tu configuración)
