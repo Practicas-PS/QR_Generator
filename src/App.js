@@ -28,7 +28,7 @@ function App() {
         <div className="gen">
           <input type="text" onChange={
             (e) => {setTemp(e.target.value)}}
-            placeholder="Enter text to encode" />
+            placeholder="Enter text to encode xd" />
           <button className="button" 
             onClick={handleClick}>
             Generate
