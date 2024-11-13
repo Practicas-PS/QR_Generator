@@ -42,26 +42,9 @@ jobs:
           echo "Realizando build..."
           npm run build
           
-          # Instalar Nginx
-          echo "Instalando Nginx..."
-          sudo apt update
-          sudo apt install -y nginx
-          
-          # Configuración mínima de Nginx
-          echo "Configurando Nginx..."
-          sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOF
-          server {
-              listen 80;
-              root /var/www/html/build;
-              index index.html;
-          
-              location / {
-                  try_files \$uri \$uri/ /index.html;
-              }
-          }
-          EOF'
-          
-          # Reiniciar Nginx
-          sudo systemctl restart nginx
+          # (Opcional) Reiniciar el servidor (ajustar según tu configuración)
+          # sudo systemctl restart nginx
+          # o si usas PM2:
+          # pm2 restart all
           
           EOF
