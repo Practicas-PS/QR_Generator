@@ -47,6 +47,10 @@ jobs:
           sudo apt update
           sudo apt install -y nginx
           
+          # Eliminar configuración anterior de Nginx si existe
+          sudo rm -f /etc/nginx/sites-enabled/mi_aplicacion
+          sudo rm -f /etc/nginx/sites-available/mi_aplicacion
+          
           # Configuración de Nginx para servir la aplicación React
           echo "Configurando Nginx..."
           sudo bash -c 'cat > /etc/nginx/sites-available/mi_aplicacion <<EOF
@@ -72,6 +76,6 @@ jobs:
           sudo nginx -t
           
           # Reiniciar Nginx para aplicar la configuración
-          sudo systemctl restart nginx
+          sudo systemctl restart nginx || (echo "Error al reiniciar Nginx" && exit 1)
           
           EOF
