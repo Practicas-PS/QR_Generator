@@ -57,8 +57,11 @@ jobs:
               index index.html;
           
               location / {
-                  try_files \$uri /index.html;
+                  try_files \$uri \$uri/ /index.html;  # Asegura que se sirvan archivos estáticos correctamente
               }
+              
+              # Evitar la visualización de directorios
+              autoindex off;  # Desactiva el listado de directorios
           }
           EOF'
           
@@ -70,8 +73,5 @@ jobs:
           
           # Reiniciar Nginx para aplicar la configuración
           sudo systemctl restart nginx
-          
-          # (Opcional) Reiniciar el servidor si usas PM2 o algún otro sistema
-          # pm2 restart all
           
           EOF
