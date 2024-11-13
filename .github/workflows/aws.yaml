@@ -31,10 +31,13 @@ jobs:
           else
             echo "Directorio ya está vacío, no se necesita limpieza."
           fi
-
-          # Clonar el repositorio desde GitHub utilizando GITHUB_TOKEN para autenticación
+          
+          # Configurar git para usar el token
+          git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+          
+          # Clonar el repositorio desde GitHub
           echo "Clonando el repositorio..."
-          git clone https://$GITHUB_TOKEN@github.com/Practicas-PS/QR_Generator.git .
+          git clone https://github.com/Practicas-PS/QR_Generator.git .
 
           # Verificar si el archivo package.json se copió correctamente
           if [ ! -f "package.json" ]; then
