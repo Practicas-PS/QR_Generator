@@ -30,14 +30,20 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Transfer build files to Lightsail
+      - name: Agregar host a known_hosts
+        run: |
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+        env:
+          HOST: 18.216.2.88
+
+      - name: Transferir archivos de build a Lightsail
         env:
           HOST: 18.216.2.88
           USER: ubuntu
         run: |
           rsync -avz --delete build/ $USER@$HOST:/var/www/html/
 
-      - name: Finalizar y reiniciar el servidor (opcional)
+      - name: Reiniciar servidor (opcional)
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
           # Reiniciar el servidor si es necesario
