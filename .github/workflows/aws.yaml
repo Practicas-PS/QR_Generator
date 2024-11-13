@@ -12,58 +12,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'  # Ajusta según la versión necesaria
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Build React app
+        run: |
+          npm run build
+
       - name: Conexion SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Despliegue en Lightsail
+      - name: Transfer build files to Lightsail
+        env:
+          HOST: 18.216.2.88
+          USER: ubuntu
+        run: |
+          rsync -avz --delete build/ $USER@$HOST:/var/www/html/
+
+      - name: Finalizar y reiniciar el servidor (opcional)
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
-          
-          # Navegar al directorio de trabajo
-          cd /var/www/html
-          
-          # Si el directorio es un repositorio git, hacer pull
-          if [ -d ".git" ]; then
-              echo "Repositorio encontrado, realizando git pull..."
-              git pull origin main
-          else
-              # Si no es un repositorio git, clonar el repositorio
-              echo "Repositorio no encontrado, clonando..."
-              git clone https://github.com/Practicas-PS/QR_Generator.git .
-          fi
-          
-          # Instalar dependencias
-          echo "Instalando dependencias..."
-          npm install
-          
-          # Realizar build del proyecto
-          echo "Realizando build..."
-          npm run build
-          
-          # Configuración de Nginx para servir la aplicación React
-          echo "Configurando Nginx..."
-          sudo bash -c 'cat > /etc/nginx/sites-available/default' <<EOF_NGINX
-          server {
-              listen 80;
-
-              server_name 18.216.2.88;  # O el dominio correspondiente
-
-              root /var/www/html/build;  # Ruta al directorio de build de React
-
-              index index.html;
-
-              location / {
-                  try_files \$uri /index.html =404;
-              }
-          }
-          EOF_NGINX
-
-          # Reiniciar Nginx para aplicar la nueva configuración
-          sudo systemctl restart nginx
-          
-          # (Opcional) Reiniciar el servidor o proceso, si usas PM2:
-          # pm2 restart all
-          
+          # Reiniciar el servidor si es necesario
+          # sudo systemctl restart apache2
           EOF
