@@ -22,7 +22,7 @@ jobs:
       # Paso 3: Conectar por SSH y realizar despliegue
       - name: Despliegue en Lightsail
         run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@3.141.199.155 "bash -s" << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@18.216.2.88 "bash -s" << 'EOF'
           
           # Navegar al directorio de trabajo
           cd /var/www/html
