@@ -42,9 +42,36 @@ jobs:
           echo "Realizando build..."
           npm run build
           
-          # (Opcional) Reiniciar el servidor (ajustar según tu configuración)
-          # sudo systemctl restart nginx
-          # o si usas PM2:
+          # Instalar y configurar Nginx
+          echo "Instalando Nginx..."
+          sudo apt update
+          sudo apt install -y nginx
+          
+          # Configuración de Nginx para servir la aplicación React
+          echo "Configurando Nginx..."
+          sudo bash -c 'cat > /etc/nginx/sites-available/mi_aplicacion <<EOF
+          server {
+              listen 80;
+              server_name 18.216.2.88;  # O tu IP pública
+              root /var/www/html/build;  # Carpeta donde se encuentra el build
+              index index.html;
+          
+              location / {
+                  try_files \$uri /index.html;
+              }
+          }
+          EOF'
+          
+          # Habilitar la configuración de Nginx
+          sudo ln -s /etc/nginx/sites-available/mi_aplicacion /etc/nginx/sites-enabled/
+          
+          # Probar la configuración de Nginx
+          sudo nginx -t
+          
+          # Reiniciar Nginx para aplicar la configuración
+          sudo systemctl restart nginx
+          
+          # (Opcional) Reiniciar el servidor si usas PM2 o algún otro sistema
           # pm2 restart all
           
           EOF
