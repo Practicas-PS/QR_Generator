@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Clonar el código desde otro repositorio (modifica la URL según sea necesario) ahora si
+      # 1. Clonar el código desde otro repositorio (modifica la URL según sea necesario)
       - name: Clone project repository
         run: |
           git clone https://github.com/Practicas-PS/QR_Generator.git .
-      
+
       # 2. Instalar Node.js para cualquier proyecto React
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -39,21 +39,30 @@ jobs:
       # 6. Agregar el servidor al archivo known_hosts
       - name: Agregar host a known_hosts
         run: |
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -v -H $HOST >> ~/.ssh/known_hosts
         env:
           HOST: ${{ secrets.REMOTE_HOST }}
 
-      # 7. Transferir archivos de la carpeta de build al servidor
+      # 7. Crear el directorio en el servidor si no existe
+      - name: Crear directorio en el servidor
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@$HOST "sudo mkdir -p /var/www/html && sudo chown -R ubuntu:ubuntu /var/www/html"
+        env:
+          HOST: ${{ secrets.REMOTE_HOST }}
+
+      # 8. Transferir archivos de build a Lightsail
       - name: Transferir archivos de build a Lightsail
+        run: |
+          rsync -avz --delete build/ ubuntu@$HOST:/var/www/html/
         env:
           HOST: ${{ secrets.REMOTE_HOST }}
           USER: ubuntu
-        run: |
-          rsync -avz --delete build/ $USER@$HOST:/var/www/html/
 
-      # 8. Reiniciar el servidor para cargar los cambios
+      # 9. Reiniciar servidor para cargar los cambios
       - name: Reiniciar servidor
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.REMOTE_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@$HOST << 'EOF'
           sudo systemctl restart apache2  # Ajusta esto si usas Nginx u otro servidor
           EOF
+        env:
+          HOST: ${{ secrets.REMOTE_HOST }}
