@@ -43,14 +43,25 @@ jobs:
         env:
           HOST: ${{ secrets.REMOTE_HOST }}
 
-      # 7. Crear el directorio en el servidor si no existe
+      # 7. Instalar Apache2 en el servidor si no está instalado
+      - name: Instalar Apache2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@$HOST << 'EOF'
+          sudo apt update
+          sudo apt install apache2 -y
+          sudo systemctl enable apache2  # Habilitar Apache para arrancar automáticamente
+          EOF
+        env:
+          HOST: ${{ secrets.REMOTE_HOST }}
+
+      # 8. Crear el directorio en el servidor si no existe
       - name: Crear directorio en el servidor
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@$HOST "sudo mkdir -p /var/www/html && sudo chown -R ubuntu:ubuntu /var/www/html"
         env:
           HOST: ${{ secrets.REMOTE_HOST }}
 
-      # 8. Transferir archivos de build a Lightsail
+      # 9. Transferir archivos de build a Lightsail
       - name: Transferir archivos de build a Lightsail
         run: |
           rsync -avz --delete build/ ubuntu@$HOST:/var/www/html/
@@ -58,8 +69,8 @@ jobs:
           HOST: ${{ secrets.REMOTE_HOST }}
           USER: ubuntu
 
-      # 9. Reiniciar servidor para cargar los cambios
-      - name: Reiniciar servidor
+      # 10. Reiniciar Apache para cargar los cambios
+      - name: Reiniciar servidor Apache
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@$HOST << 'EOF'
           sudo systemctl restart apache2  # Ajusta esto si usas Nginx u otro servidor
