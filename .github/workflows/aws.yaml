@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Clonar el código desde otro repositorio (modifica la URL según sea necesario)
+      # 1. Clonar el código desde otro repositorio (modifica la URL según sea necesario) ahora si
       - name: Clone project repository
         run: |
           git clone https://github.com/Practicas-PS/QR_Generator.git .
