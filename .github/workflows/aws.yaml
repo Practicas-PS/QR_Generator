@@ -9,73 +9,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del código del repositorio
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Configurar Node.js
+      # 1. Clonar el código desde otro repositorio (modifica la URL según sea necesario)
+      - name: Clone project repository
+        run: |
+          git clone https://github.com/Practicas-PS/QR_Generator.git .
+      
+      # 2. Instalar Node.js para cualquier proyecto React
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'  # Ajustar según la versión necesaria
 
-      # Instalar dependencias
+      # 3. Instalar las dependencias del proyecto
       - name: Install dependencies
         run: |
           npm install
 
-      # Construir la aplicación React
+      # 4. Construir el proyecto React
       - name: Build React app
         run: |
           npm run build
 
-      # Configurar la conexión SSH
-      - name: Conexion SSH
+      # 5. Configurar la conexión SSH
+      - name: Configurar SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Agregar host a known_hosts
+      # 6. Agregar el servidor al archivo known_hosts
       - name: Agregar host a known_hosts
         run: |
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
         env:
-          HOST: 18.216.2.88
+          HOST: ${{ secrets.REMOTE_HOST }}
 
-      # Transferir archivos de build a Lightsail
+      # 7. Transferir archivos de la carpeta de build al servidor
       - name: Transferir archivos de build a Lightsail
         env:
-          HOST: 18.216.2.88
+          HOST: ${{ secrets.REMOTE_HOST }}
           USER: ubuntu
         run: |
           rsync -avz --delete build/ $USER@$HOST:/var/www/html/
 
-      # Despliegue en Lightsail (clonación o actualización del repositorio)
-      - name: Despliegue en Lightsail
+      # 8. Reiniciar el servidor para cargar los cambios
+      - name: Reiniciar servidor
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
-          cd /var/www/html
-
-          # Verificar si el directorio es un repositorio git
-          if [ ! -d ".git" ]; then
-              echo "Eliminando contenido previo..."
-              rm -rf *
-              echo "Clonando repositorio..."
-              git clone https://github.com/Practicas-PS/QR_Generator.git .
-          else
-              echo "Repositorio encontrado, realizando git pull..."
-              git pull origin main
-          fi
-
-          # Instalar dependencias si package.json está presente
-          if [ -f "package.json" ]; then
-              npm install
-              npm run build
-          else
-              echo "Error: package.json no encontrado. Verifique que el repositorio contenga este archivo."
-              exit 1
-          fi
-
-          # (Opcional) Reiniciar el servidor si es necesario
-          # sudo systemctl restart apache2
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.REMOTE_HOST }} << 'EOF'
+          sudo systemctl restart apache2  # Ajusta esto si usas Nginx u otro servidor
           EOF
