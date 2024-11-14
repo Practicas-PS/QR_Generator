@@ -9,33 +9,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Paso 1: Descargar el código del repositorio a GitHub Actions
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Paso 2: Configurar Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'  # Ajusta según la versión necesaria
 
+      # Paso 3: Instalar dependencias en GitHub Actions
       - name: Install dependencies
         run: |
           npm install
 
+      # Paso 4: Construir la aplicación React
       - name: Build React app
         run: |
           npm run build
 
+      # Paso 5: Configurar la conexión SSH con tu servidor
       - name: Conexion SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      # Paso 6: Agregar host a known_hosts para evitar el prompt de autenticidad
       - name: Agregar host a known_hosts
         run: |
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
         env:
           HOST: 18.216.2.88
 
+      # Paso 7: Transferir archivos de build a Lightsail
       - name: Transferir archivos de build a Lightsail
         env:
           HOST: 18.216.2.88
@@ -43,9 +50,28 @@ jobs:
         run: |
           rsync -avz --delete build/ $USER@$HOST:/var/www/html/
 
-      - name: Reiniciar servidor (opcional)
+      # Paso 8: Despliegue y actualización en el servidor remoto
+      - name: Despliegue en Lightsail
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@18.216.2.88 << 'EOF'
-          # Reiniciar el servidor si es necesario
+          cd /var/www/html
+          
+          # Verificar si es un repositorio Git y actualizar, o clonar si no lo es
+          if [ -d ".git" ]; then
+              echo "Repositorio encontrado, realizando git pull..."
+              git pull origin main
+          else
+              echo "Repositorio no encontrado, clonando..."
+              git clone https://github.com/Practicas-PS/QR_Generator.git .
+          fi
+          
+          # Instalar dependencias y construir el proyecto
+          npm install
+          npm run build
+          
+          # (Opcional) Reiniciar el servidor si es necesario
           # sudo systemctl restart apache2
+          # o si usas PM2:
+          # pm2 restart all
+          
           EOF
